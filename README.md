@@ -1,6 +1,6 @@
 # Resume review
 
-Resume review palvelussa voi antaa ja saada arvosteluja CV:istä. Palvelu toimii siten, että käyttäjä lataa sivulle CV:nsä, jonka jälkeen palvelu osoittaa CV:n jollekkin arvostelijoista. Seuraavaksi arvostelija antaa palautetta CV:stä ja saa arvosteltavaksi seuraavan CV:n jonossa. Arvostelija voi edelleen jatkaa kommunikointia käyttäjän kanssa. CV:t ja keskustelut (kommentit) pysyvät käyttäjän ja arvostelijan välisinä, eivätkä muut käyttäjät nää niitä.
+Resume review palvelussa voi antaa ja saada arvosteluja CV:istä. Palvelu toimii siten, että käyttäjä lataa sivulle CV:nsä, jonka jälkeen palvelu osoittaa CV:n jollekkin arvostelijoista. Seuraavaksi arvostelija antaa palautetta CV:stä ja saa arvosteltavaksi seuraavan CV:n jonossa. Arvostelija voi edelleen jatkaa kommunikointia käyttäjän kanssa. CV:t ja keskustelut (kommentit) pysyvät käyttäjän ja arvostelijan välisinä, eivätkä muut käyttäjät näe niitä.
 
 Tässä Resume review palvelun keskeisimmät ominaisuudet:
 
