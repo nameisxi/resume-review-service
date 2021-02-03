@@ -1,0 +1,32 @@
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    email TEXT,
+    created_at TIMESTAMP,
+    password TEXT,
+    reviewer BOOLEAN
+);
+
+CREATE TABLE resumes (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users,
+    reviewer_id INTEGER REFERENCES users,
+    file_address TEXT,
+    created_at TIMESTAMP
+);
+
+CREATE TABLE messages (
+    id SERIAL PRIMARY KEY,
+    sender_id REFERENCES users,
+    resume_id REFERENCES resumes,
+    message TEXT,
+    created_at TIMESTAMP
+);
+
+CREATE TABLE ratings (
+    id SERIAL PRIMARY KEY,
+    customer_id INTEGER REFERENCES users,
+    reviewer_id INTEGER REFERENCES users,
+    resume_id INTEGER REFERENCES resumes,
+    rating INTEGER,
+    created_at TIMESTAMP
+);
