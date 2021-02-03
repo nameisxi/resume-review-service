@@ -44,7 +44,7 @@ def validate_credentials(email, password):
         it returns an error message.
     """
     if not email.strip():
-        return "Invalid email address"\
+        return "Invalid email address"
 
     if not password.strip():
         return "Invalid password"
@@ -104,10 +104,6 @@ def signup():
         return create_account(email, password)
     return result
 
-#@app.route("/signin", methods=['GET'])
-#def login_template():
-#    pass
-
 @app.route("/login", methods=["POST"])
 def login():
     email = request.form["email"].lower().strip()
@@ -124,22 +120,4 @@ def logout():
     del session["email"]
     return redirect("/")
 
-"""@app.route("/authenticate",methods=["POST"])
-def authenticate():
-    email = request.form["email"].lower().strip()
-    password = request.form["password"].strip()
-    print("YASS")
-    if request.form["register"]:
-        print("eiiii")
-        result = validate_credentials(email, password)
-        if result is None:
-            return register(email, password)
-        return result
-
-    if request.form["login"]:
-        print("yaaas")
-        result = check_credentials(email, password)
-        if result is None:
-            return login(email)
-        return result"""
 
