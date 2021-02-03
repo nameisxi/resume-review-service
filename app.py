@@ -19,14 +19,10 @@ def load_configs(app):
     return app, db
 
 app = Flask(__name__)
-app, db = load_configs(app)
+app, db = load_configs(app)   
 
-@app.route("/")
-def index():
-    return render_template("index.html")
 
-#@app.route("/register", methods=["POST"])
-def register(email, password):
+def create_account(email, password):
     hash_value = generate_password_hash(password)
 
     sql = "INSERT INTO users (email,password,reviewer) VALUES (:email,:password,:reviewer)"
@@ -34,15 +30,23 @@ def register(email, password):
     db.session.execute(sql, {"email":email,"password":hash_value,"reviewer":False})
     db.session.commit()
 
-def login(email):
+    return sign_in(email)
+
+def sign_in(email):
     session["email"] = email
     return redirect("/")
 
 def validate_credentials(email, password):
-    if not email:
+    """ 
+        Validates weather given email and password 
+        can be used to create a new account. If yes,
+        this function returns a None. If not okay,
+        it returns an error message.
+    """
+    if not email.strip():
         return "Invalid email address"\
 
-    if not password:
+    if not password.strip():
         return "Invalid password"
 
     sql = "SELECT password FROM users WHERE email=:email"
@@ -55,8 +59,15 @@ def validate_credentials(email, password):
     return None
 
 def check_credentials(email, password):
+    """ 
+        Checks weather given email and password 
+        can be used to login. If yes, this 
+        function returns a None. If not okay,
+        it returns an error message.
+    """
+
     if not email:
-        return "Invalid email address"\
+        return "Invalid email address"
 
     if not password:
         return "Invalid password"
@@ -72,28 +83,63 @@ def check_credentials(email, password):
         if check_password_hash(hash_value,password):
             return None
         else:
-            # Invalid password
             return "Invalid password"
 
-@app.route("/authenticate",methods=["POST"])
-def authenticate():
-    email = request.form["email"]
-    password = request.form["password"]
+@app.route("/")
+def index():
+    return render_template("index.html") 
 
-    if request.form["register"]:
-        result = validate_credentials()
-        if not result():
-            return register()
-        return result
+@app.route("/signup", methods=['GET'])
+def signup_template():
+    return render_template("signup.html")
 
-    if request.form["login"]:
-        result = check_credentials()
-        if not result:
-            return login()
-        return result
+@app.route("/signup", methods=["POST"])
+def signup():
+    email = request.form["email"].lower().strip()
+    password = request.form["password"].strip()
+
+    result = validate_credentials(email, password)
+
+    if result is None:
+        return create_account(email, password)
+    return result
+
+#@app.route("/signin", methods=['GET'])
+#def login_template():
+#    pass
+
+@app.route("/login", methods=["POST"])
+def login():
+    email = request.form["email"].lower().strip()
+    password = request.form["password"].strip()
+
+    result = check_credentials(email, password)
+
+    if result is None:
+        return sign_in(email)
+    return result
 
 @app.route("/logout")
 def logout():
-    del session["username"]
+    del session["email"]
     return redirect("/")
+
+"""@app.route("/authenticate",methods=["POST"])
+def authenticate():
+    email = request.form["email"].lower().strip()
+    password = request.form["password"].strip()
+    print("YASS")
+    if request.form["register"]:
+        print("eiiii")
+        result = validate_credentials(email, password)
+        if result is None:
+            return register(email, password)
+        return result
+
+    if request.form["login"]:
+        print("yaaas")
+        result = check_credentials(email, password)
+        if result is None:
+            return login(email)
+        return result"""
 

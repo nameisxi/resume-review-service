@@ -1,15 +1,16 @@
 {% if session.email %}
-<p>Welcome back, {{ session.email }}!</p>
+<p>Welcome, {{ session.email }}!</p>
 <a href="/logout">Log out</a>
 
 {% else %}
 <h1>Resume review service</h1>
-<form action="/authenticate" method="POST">
-<p>Email:<br>
-<input type="text" name="email"></p>
-<p>Password:<br>
-<input type="password" name="password"></p>
-<input type="submit" value="Log in" name="login">
-<input type="submit" value="Register" name="register">
+<h3>Login</h3>
+<form action="/login" method="POST">
+    <p>Email:<br>
+    <input type="text" name="email"></p>
+    <p>Password:<br>
+    <input type="password" name="password"></p>
+    <input type="submit" value="Login" name="login">
 </form>
+<p>No account? <a href="/signup">Sign up here</a>.</p>
 {% endif %}
