@@ -1,0 +1,15 @@
+{% if session.email %}
+<p>Welcome back, {{ session.email }}!</p>
+<a href="/logout">Log out</a>
+
+{% else %}
+<h1>Resume review service</h1>
+<form action="/authenticate" method="POST">
+<p>Email:<br>
+<input type="text" name="email"></p>
+<p>Password:<br>
+<input type="password" name="password"></p>
+<input type="submit" value="Log in" name="login">
+<input type="submit" value="Register" name="register">
+</form>
+{% endif %}
