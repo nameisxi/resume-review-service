@@ -14,3 +14,5 @@ Arvostelija (henkilö joka arvioi CV:itä):
 - Arvostelija voi luoda uuden tilin tai kirjautua olemmassa olevalle tilille
 - Arvostelija voi arvioida hänelle osoitettuja CV:itä
 - Arvostelija voi kommunikoida käyttäjän kanssa kommenttien muodossa
+
+# TODO: ability to sign up as a resume reviewer

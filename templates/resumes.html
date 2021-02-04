@@ -1,0 +1,10 @@
+<h2>Your resumes </h2>
+<hr>
+{% for resume in resumes %}
+Name: {{ resume[0] }}
+<br>
+Submitted: {{ resume[1] }}
+<hr>
+{% endfor %}
+
+<h3><a href="/add-resume">Add resume</a></h3>

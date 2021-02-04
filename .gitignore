@@ -1,5 +1,11 @@
 .DS*
 
+# exclude everything
+resumes/*
+
+# exception to the rule
+!resumes/.gitkeep 
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
