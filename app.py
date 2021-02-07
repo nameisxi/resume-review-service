@@ -79,10 +79,10 @@ def check_credentials(email, password):
     """
 
     if not email:
-        return "Invalid email address"
+        return "Invalid email address", None
 
     if not password:
-        return "Invalid password"
+        return "Invalid password", None
 
     sql = "SELECT password, reviewer FROM users WHERE email=:email"
     result = db.session.execute(sql, {"email":email}).fetchone()   
