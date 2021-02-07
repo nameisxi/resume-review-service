@@ -61,7 +61,7 @@ def validate_credentials(email, password):
     user = result.fetchone()  
 
     if user:
-        return "Username taken"
+        return "There's already an account with this email address"
 
     return None
 
@@ -173,11 +173,12 @@ def signup_template():
 def signup():
     email = request.form["email"].lower().strip()
     password = request.form["password"].strip()
+    user_type = request.form["user-type"]
 
     result = validate_credentials(email, password)
 
     if result is None:
-        return create_account(email, password, False)
+        return create_account(email, password, user_type == "1")
     return result
 
 @app.route("/login", methods=["POST"])
