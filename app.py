@@ -37,7 +37,7 @@ def create_account(email, password, reviewer):
     db.session.execute(sql, {"email":email,"password":hash_value,"reviewer":reviewer})
     db.session.commit()
 
-    return sign_in(email)
+    return sign_in(email, reviewer)
 
 def sign_in(email, reviewer):
     session["email"] = email
