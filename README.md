@@ -15,4 +15,14 @@ Arvostelija (henkilö joka arvioi CV:itä):
 - Arvostelija voi arvioida hänelle osoitettuja CV:itä
 - Arvostelija voi kommunikoida käyttäjän kanssa kommenttien muodossa
 
-# TODO: ability to sign up as a resume reviewer
+# Palautus 2: Tämän hetkinen toiminnallisuus
+
+Käyttäjä (henkilö joka hakee apua CV:n arviointiin):
+- Käyttäjä voi luoda uuden tilin tai kirjautua olemmassa olevalle tilille
+- Käyttäjä voi ladata CV:n palveluun PDF muodossa
+
+Arvostelija (henkilö joka arvioi CV:itä):
+- Arvostelija voi luoda uuden tilin tai kirjautua olemmassa olevalle tilille
+- Arvostelija ei voi vielä arvioida, tai näe, hänelle allokoituja CV:itä
+
+Sovellusta voi testata täällä: [TODO: url]
