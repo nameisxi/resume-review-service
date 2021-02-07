@@ -23,6 +23,6 @@ Käyttäjä (henkilö joka hakee apua CV:n arviointiin):
 
 Arvostelija (henkilö joka arvioi CV:itä):
 - Arvostelija voi luoda uuden tilin tai kirjautua olemmassa olevalle tilille
-- Arvostelija ei voi vielä arvioida, tai näe, hänelle allokoituja CV:itä
+- Arvostelija näkee hänelle ohjatut/allokoidut CV:t, mutta ei voi vielä antaa niille palautetta
 
-Sovellusta voi testata täällä: [TODO: url]
+Sovellusta voi testata täällä: http://resume-review-service.herokuapp.com/
