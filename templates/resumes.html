@@ -1,13 +1,25 @@
 {% extends 'base.html' %}
 {% block content %}
+{% if session.reviewer %}
+<h2>Resumes assigned to you</h2>
+{% else %}
 <h2>Your resumes </h2>
+{% endif %}
 <hr>
 {% for resume in resumes %}
 Name: {{ resume[0] }}
 <br>
-Submitted: {{ resume[1] }}
+{% if session.reviewer %}
+Submitted by: {{ resume[1] }}
+{% else %}
+Assigned to: {{ resume[1] }}
+{% endif %}
+<br>
+Submitted at: {{ resume[2] }}
 <hr>
 {% endfor %}
 
+{% if not session.reviewer %}
 <h3><a href="/add-resume">Add resume</a></h3>
+{% endif %}
 {% endblock %}

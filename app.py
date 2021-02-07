@@ -39,8 +39,13 @@ def create_account(email, password, reviewer):
 
     return sign_in(email)
 
-def sign_in(email):
+def sign_in(email, reviewer):
     session["email"] = email
+    session["reviewer"] = reviewer
+
+    print("****************")
+    print(session.get('reviewer'))
+
     return redirect("/")
 
 def validate_credentials(email, password):
@@ -79,30 +84,44 @@ def check_credentials(email, password):
     if not password:
         return "Invalid password"
 
-    sql = "SELECT password FROM users WHERE email=:email"
-    result = db.session.execute(sql, {"email":email})
-    user = result.fetchone()   
+    sql = "SELECT password, reviewer FROM users WHERE email=:email"
+    result = db.session.execute(sql, {"email":email}).fetchone()   
 
-    if user == None:
-        return "Invalid username"
+    if result == None:
+        return "Invalid username", None
     else:
-        hash_value = user[0]
+        hash_value = result[0]
+        reviewer = result[1]
         if check_password_hash(hash_value,password):
-            return None
+            return None, reviewer
         else:
-            return "Invalid password"
+            return "Invalid password", None
 
-def fetch_resumes(email):
+def fetch_resumes(email, reviewer):
     if not email:
         return []
 
     query = """
-                SELECT resumes.name, resumes.created_at 
+                SELECT resumes.name, users2.email, resumes.created_at 
                 FROM resumes
-                LEFT JOIN users
-                ON resumes.user_id = users.id
-                WHERE users.email = :email
+                LEFT JOIN users AS users1
+                ON resumes.user_id = users1.id
+                LEFT JOIN users AS users2
+                ON resumes.reviewer_id = users2.id
+                WHERE users1.email = :email
             """
+
+    if reviewer:
+        query = """
+                    SELECT resumes.name, users2.email, resumes.created_at 
+                    FROM resumes
+                    LEFT JOIN users AS users1
+                    ON resumes.reviewer_id = users1.id
+                    LEFT JOIN users AS users2
+                    ON resumes.user_id = users2.id
+                    WHERE users1.email = :email
+                """
+
     resumes = db.session.execute(query, {"email": email}).fetchall()
 
     return resumes
@@ -128,8 +147,8 @@ def upload_resume(request):
         resume.save(file_address)
 
         user_id = db.session.execute("SELECT id FROM users WHERE email = :email", {"email": session.get('email')}).fetchone()[0]
-        # By using limit 1, a random reviewer will be picked
-        reviewer_id =  db.session.execute("SELECT id FROM users WHERE reviewer = true LIMIT 1").fetchone()[0]      
+        # By using ORDER BY random() LIMIT 1, a random reviewer will be picked
+        reviewer_id =  db.session.execute("SELECT id FROM users WHERE reviewer = true ORDER BY random() LIMIT 1").fetchone()[0]      
 
         sql = """
                    INSERT INTO resumes (user_id,reviewer_id,file_address,name) VALUES (:user_id,:reviewer_id,:file_address,:name) 
@@ -149,7 +168,7 @@ def index():
 @app.route("/resumes")
 def resumes():
     if session.get('email'):
-        resumes = fetch_resumes(session.get('email'))
+        resumes = fetch_resumes(session.get('email'), session.get('reviewer'))
         return render_template("resumes.html", resumes=resumes)
     return redirect("/")
 
@@ -186,15 +205,17 @@ def login():
     email = request.form["email"].lower().strip()
     password = request.form["password"].strip()
 
-    result = check_credentials(email, password)
+    result, reviewer = check_credentials(email, password)
 
     if result is None:
-        return sign_in(email)
+        return sign_in(email, reviewer)
+
     return result
 
 @app.route("/logout")
 def logout():
     del session["email"]
+    del session['reviewer']
     return redirect("/")
 
 
