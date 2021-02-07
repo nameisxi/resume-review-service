@@ -1,3 +1,5 @@
+{% extends 'base.html' %}
+{% block content %}
 <h2>Sign up</h2>
 <form action="/signup" method="POST">
     <p>Email:<br>
@@ -6,3 +8,4 @@
     <input type="password" name="password"></p>
     <input type="submit" value="Sign up" name="signup">
 </form>
+{% endblock %}

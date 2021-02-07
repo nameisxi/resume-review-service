@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+  <head>
+    {% block head %}
+    <title>Resume Review</title>
+    {% endblock %}
+  </head>
+  <body>
+    <div id="nav-bar">
+        <h1>Resume review service</h1>
+        {% if session.email %}
+            <a href="/logout">Log out</a>
+        {% endif %}
+    </div>
+    <div id="content">{% block content %}{% endblock %}</div>
+  </body>
+</html>

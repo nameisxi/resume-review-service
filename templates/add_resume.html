@@ -1,5 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}
 <h2>Add new resume </h2>
 <form action="/add-resume" method="POST" enctype=multipart/form-data>
     <input type=file name=resume>
     <input type="submit" value="Add" name="add">
 </form>
+{% endblock %}
