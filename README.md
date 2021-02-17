@@ -34,3 +34,4 @@ Sovellusta voi testata täällä: http://resume-review-service.herokuapp.com/
     - rating
     - pdf viewer
 - unauthorised access attempt -> homepage
+- backend resume filesize check

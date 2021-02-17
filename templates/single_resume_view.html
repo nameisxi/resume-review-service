@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+{% block content %}
+<!--.split("_identifier_")[0]-->
+<h2>{{ resume[0] }}</h2>
+<embed src="{{ request.url_root }}/uploads/{{ resume[4] }}" width= "500" height= "375" type="application/pdf">
+{% endblock %}

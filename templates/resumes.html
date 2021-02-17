@@ -6,16 +6,19 @@
 <h2>Your resumes </h2>
 {% endif %}
 <hr>
+
 {% for resume in resumes %}
-Name: {{ resume[0] }}
-<br>
-{% if session.reviewer %}
-Submitted by: {{ resume[1] }}
-{% else %}
-Assigned to: {{ resume[1] }}
-{% endif %}
-<br>
-Submitted at: {{ resume[2] }}
+<div id="{{ resume[3] }}" onClick="location.href='{{ request.url }}/{{ resume[3] }}'">
+    Name: {{ resume[0] }}
+    <br>
+    {% if session.reviewer %}
+    Submitted by: {{ resume[1] }}
+    {% else %}
+    Assigned to: {{ resume[1] }}
+    {% endif %}
+    <br>
+    Submitted at: {{ resume[2] }}
+</div>
 <hr>
 {% endfor %}
 

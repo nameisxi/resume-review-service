@@ -1,8 +1,8 @@
-import os
+import os, time
 from os import getenv
 
 from flask import Flask
-from flask import redirect, render_template, request, session, url_for, flash
+from flask import redirect, render_template, request, session, url_for, flash, send_from_directory
 
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
@@ -101,7 +101,7 @@ def fetch_resumes(email, reviewer):
         return []
 
     query = """
-                SELECT resumes.name, users2.email, resumes.created_at 
+                SELECT resumes.name, users2.email, resumes.created_at, resumes.id, resumes.file_address 
                 FROM resumes
                 LEFT JOIN users AS users1
                 ON resumes.user_id = users1.id
@@ -112,7 +112,7 @@ def fetch_resumes(email, reviewer):
 
     if reviewer:
         query = """
-                    SELECT resumes.name, users2.email, resumes.created_at 
+                    SELECT resumes.name, users2.email, resumes.created_at, resumes.id, resumes.file_address
                     FROM resumes
                     LEFT JOIN users AS users1
                     ON resumes.reviewer_id = users1.id
@@ -140,7 +140,8 @@ def upload_resume(request):
         return redirect(request.url)
 
     if resume and allowed_filename(resume.filename):
-        filename = secure_filename(resume.filename)
+        filename = f"{resume.filename}_identifier_{session.get('email')}_{time.time()}"
+        filename = secure_filename(filename)
         file_address = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         
         resume.save(file_address)
@@ -182,6 +183,31 @@ def add_resume():
     if session.get('email'):
         upload_resume(request)
     return redirect("/")
+
+@app.route("/resumes/<int:resume_id>")
+def resume(resume_id):
+    if session.get('email'):
+        resumes = fetch_resumes(session.get('email'), session.get('reviewer'))
+        resume_index = None
+
+        print("toimii 1")
+
+        for i, resume in enumerate(resumes):
+            if resume[3] == resume_id:
+                resume_index = i
+
+        print("toimii 2")
+
+        if resume_index:
+            print("toimii 3")
+            resume = resumes[resume_index]
+            return render_template("single_resume_view.html", resume=resume)
+
+    return redirect("/")
+
+@app.route("/uploads/<path:file_address>") 
+def serve_resume(file_address):
+    return send_from_directory('', file_address)
 
 @app.route("/signup", methods=['GET'])
 def signup_template():
