@@ -207,7 +207,14 @@ def resume(resume_id):
 
 @app.route("/uploads/<path:file_address>") 
 def serve_resume(file_address):
-    return send_from_directory('', file_address)
+    if session.get("email"):
+        resumes = fetch_resumes(session.get('email'), session.get('reviewer'))
+        
+        for resume in resumes:
+            if resume[4] == file_address:
+                return send_from_directory('', file_address)
+
+    return redirect("/")
 
 @app.route("/signup", methods=['GET'])
 def signup_template():
