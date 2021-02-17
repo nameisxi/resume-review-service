@@ -38,7 +38,6 @@ def create_account(email, password, reviewer):
     db.session.commit()
 
     return sign_in(email, reviewer)
-
 def sign_in(email, reviewer):
     session["email"] = email
     session["reviewer"] = reviewer

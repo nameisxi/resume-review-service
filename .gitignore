@@ -1,4 +1,5 @@
 .DS*
+.vscode*
 
 # exclude everything
 resumes/*

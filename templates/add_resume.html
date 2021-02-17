@@ -1,8 +1,21 @@
 {% extends 'base.html' %}
 {% block content %}
+<!--<head>
+    <script type=text/javascript src="{{url_for('static', filename='js/add_resume.js') }}"></script>
+</head>-->
 <h2>Add new resume </h2>
 <form action="/add-resume" method="POST" enctype=multipart/form-data>
-    <input type=file name=resume>
+    <input type=file accept="application/pdf" name=resume id="resume">
     <input type="submit" value="Add" name="add">
 </form>
+<script>
+    var resumeField = document.getElementById("resume");
+
+    resumeField.onchange = function() {
+        if(this.files[0].size > 5242880){
+            alert("Your resume is too big! The maximum filesize is 5MB.");
+            this.value = "";
+        };
+    };
+</script>
 {% endblock %}

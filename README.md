@@ -26,3 +26,11 @@ Arvostelija (henkilö joka arvioi CV:itä):
 - Arvostelija näkee hänelle ohjatut/allokoidut CV:t, mutta ei voi vielä antaa niille palautetta
 
 Sovellusta voi testata täällä: http://resume-review-service.herokuapp.com/
+
+
+# TODO: 
+- single resume view
+    - messaging
+    - rating
+    - pdf viewer
+- unauthorised access attempt -> homepage
