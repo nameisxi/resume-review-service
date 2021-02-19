@@ -9,7 +9,7 @@
 
 {% for resume in resumes %}
 <div id="{{ resume[3] }}" onClick="location.href='{{ request.url }}/{{ resume[3] }}'">
-    Name: {{ resume[0] }}
+    Name: {{ resume[0].split("_identifier_")[1] }}
     <br>
     {% if session.reviewer %}
     Submitted by: {{ resume[1] }}

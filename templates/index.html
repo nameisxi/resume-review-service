@@ -5,11 +5,11 @@
 
 {% else %}
 <h2>Login</h2>
-<form action="/login" method="GET">
+<form action="/login" method="POST">
     <p>Email:<br>
-    <input type="text" name="email"></p>
+    <input type="text" name="email" required></p>
     <p>Password:<br>
-    <input type="password" name="password"></p>
+    <input type="password" name="password" required></p>
     <input type="submit" value="Login" name="login">
 </form>
 <p>No account? <a href="/signup">Sign up here</a>.</p>

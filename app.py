@@ -140,7 +140,7 @@ def upload_resume(request):
         return redirect(request.url)
 
     if resume and allowed_filename(resume.filename):
-        filename = f"{resume.filename}_identifier_{session.get('email')}_{time.time()}"
+        filename = f"{session.get('email')}_{time.time()}_identifier_{resume.filename}"
         filename = secure_filename(filename)
         file_address = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         
@@ -159,13 +159,40 @@ def upload_resume(request):
 
         return redirect("/resumes")
 
-@app.route("/")
+def fetch_messages(resume_id):
+    if not resume_id:
+        return []
+
+    query = """
+                SELECT users.email, messages.created_at, messages.message 
+                FROM messages
+                LEFT JOIN users 
+                ON messages.sender_id = users.id
+                WHERE messages.resume_id = :resume_id
+                ORDER BY messages.created_at ASC
+            """
+
+    messages = db.session.execute(query, {"resume_id": resume_id}).fetchall()
+
+    return messages
+
+def save_message(resume_id, message):
+    sender_id = db.session.execute("SELECT id FROM users WHERE email = :email", {"email": session.get('email')}).fetchone()[0]
+
+    sql = "INSERT INTO messages (sender_id,resume_id,message) VALUES (:sender_id,:resume_id,:message)"
+    
+    db.session.execute(sql, {"sender_id":sender_id,"resume_id":resume_id,"message":message})
+    db.session.commit()
+
+    return redirect(f"/resumes/{resume_id}")
+
+@app.route("/", methods=['GET'])
 def index():
     if session.get('email'):
         return redirect("/resumes")
     return render_template("index.html") 
 
-@app.route("/resumes")
+@app.route("/resumes", methods=['GET'])
 def resumes():
     if session.get('email'):
         resumes = fetch_resumes(session.get('email'), session.get('reviewer'))
@@ -184,35 +211,49 @@ def add_resume():
         upload_resume(request)
     return redirect("/")
 
-@app.route("/resumes/<int:resume_id>")
-def resume(resume_id):
+@app.route("/send-message/<int:resume_id>", methods=['POST']) 
+def send_message(resume_id):
+    if session.get('email'):
+        message = request.form["message"].strip()
+        resumes = fetch_resumes(session.get('email'), session.get('reviewer'))
+        
+        for resume in resumes:
+            if resume[3] == resume_id and message:
+                return save_message(resume_id, message)
+    
+    return redirect("/")
+        
+
+@app.route("/resumes/<int:resume_id>", methods=['GET'])
+def resume_view(resume_id):
     if session.get('email'):
         resumes = fetch_resumes(session.get('email'), session.get('reviewer'))
         resume_index = None
-
-        print("toimii 1")
 
         for i, resume in enumerate(resumes):
             if resume[3] == resume_id:
                 resume_index = i
 
-        print("toimii 2")
-
         if resume_index:
-            print("toimii 3")
+
             resume = resumes[resume_index]
-            return render_template("single_resume_view.html", resume=resume)
+            messages = fetch_messages(resume_id)
+            return render_template("single_resume_view.html", resume=resume, messages=messages)
 
     return redirect("/")
 
-@app.route("/uploads/<path:file_address>") 
+@app.route("/uploads/<path:file_address>", methods=['GET']) 
 def serve_resume(file_address):
+    file_address = f"./{file_address}"
+
     if session.get("email"):
         resumes = fetch_resumes(session.get('email'), session.get('reviewer'))
         
         for resume in resumes:
             if resume[4] == file_address:
                 return send_from_directory('', file_address)
+        
+        return "No resume found"
 
     return redirect("/")
 

@@ -1,6 +1,30 @@
 {% extends 'base.html' %}
 {% block content %}
-<!--.split("_identifier_")[0]-->
-<h2>{{ resume[0] }}</h2>
-<embed src="{{ request.url_root }}/uploads/{{ resume[4] }}" width= "500" height= "375" type="application/pdf">
+<h2>{{ resume[0].split("_identifier_")[1] }}</h2>
+{% if session.reviewer %}
+Submitted by: {{ resume[1] }}
+{% else %}
+Assigned to: {{ resume[1] }}
+{% endif %}
+<br>
+Submitted at: {{ resume[2] }}
+<embed src="{{ request.url_root }}uploads/{{ resume[4] }}" width= "500" height= "800" type="application/pdf">
+<h3>Feedback</h3>
+{% for message in messages %}
+<div>
+    <p>Sender: {{ message[0] }}</p>
+    <p>Sent at: {{ message[1] }}</p>
+    <br>
+    <p>{{ message[2] }}</p>
+</div>
+<hr>
+{% endfor %}
+
+<form action="/send-message/{{ resume[3] }}" method="POST">
+    <p>New message:<br>
+    <input type="textarea" name="message" required></p>
+    <br>
+    <input type="submit" value="Send" name="send_message">
+</form>
+
 {% endblock %}

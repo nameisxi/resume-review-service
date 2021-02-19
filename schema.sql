@@ -17,8 +17,8 @@ CREATE TABLE resumes (
 
 CREATE TABLE messages (
     id SERIAL PRIMARY KEY,
-    sender_id REFERENCES users,
-    resume_id REFERENCES resumes,
+    sender_id INTEGER REFERENCES users,
+    resume_id INTEGER REFERENCES resumes,
     message TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
