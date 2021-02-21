@@ -15,15 +15,22 @@ Arvostelija (henkilö joka arvioi CV:itä):
 - Arvostelija voi arvioida hänelle osoitettuja CV:itä
 - Arvostelija voi kommunikoida käyttäjän kanssa kommenttien muodossa
 
-# Palautus 2: Tämän hetkinen toiminnallisuus
-
+# Palautus 3: Tämän hetkinen toiminnallisuus
 Käyttäjä (henkilö joka hakee apua CV:n arviointiin):
 - Käyttäjä voi luoda uuden tilin tai kirjautua olemmassa olevalle tilille
 - Käyttäjä voi ladata CV:n palveluun PDF muodossa
+- Käyttäjä voi kommunikoida arvostelijan kanssa kommenttien muodossa (jokainen CV on kuitenkin yksityinen)
 
 Arvostelija (henkilö joka arvioi CV:itä):
 - Arvostelija voi luoda uuden tilin tai kirjautua olemmassa olevalle tilille
-- Arvostelija näkee hänelle ohjatut/allokoidut CV:t, mutta ei voi vielä antaa niille palautetta
+- Arvostelija voi arvioida hänelle osoitettuja CV:itä
+- Arvostelija voi kommunikoida käyttäjän kanssa kommenttien muodossa
 
 Sovellusta voi testata täällä: http://resume-review-service.herokuapp.com/
 
+Valmiit testikäyttäjät:
+
+
+TODO:
+-testi kayttajat (user & reviewer) datan kera
+-add unique filter to users email field
