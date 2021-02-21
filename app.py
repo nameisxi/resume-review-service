@@ -276,23 +276,22 @@ def signup():
     password = request.form["password"].strip()
     user_type = request.form["user-type"]
 
-    result = validate_credentials(email, password)
+    error = validate_credentials(email, password)
 
-    if result is None:
+    if error is None:
         return create_account(email, password, user_type == "1")
-    return result
+    return render_template("signup.html", error=error)
 
 @app.route("/signin", methods=["POST"])
 def signin():
     email = request.form["email"].lower().strip()
     password = request.form["password"].strip()
 
-    result, reviewer = check_credentials(email, password)
+    error, reviewer = check_credentials(email, password)
 
-    if result is None:
+    if error is None:
         return sign_in(email, reviewer)
-
-    return result
+    return render_template("index.html", error=error)
 
 @app.route("/signout")
 def signout():
