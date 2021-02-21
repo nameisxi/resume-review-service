@@ -244,8 +244,7 @@ def resume_view(resume_id):
             if resume[3] == resume_id:
                 resume_index = i
 
-        if resume_index:
-
+        if resume_index is not None:
             resume = resumes[resume_index]
             messages = fetch_messages(resume_id)
             return render_template("single_resume_view.html", resume=resume, messages=messages)
@@ -283,8 +282,8 @@ def signup():
         return create_account(email, password, user_type == "1")
     return result
 
-@app.route("/login", methods=["POST"])
-def login():
+@app.route("/signin", methods=["POST"])
+def signin():
     email = request.form["email"].lower().strip()
     password = request.form["password"].strip()
 
@@ -295,8 +294,8 @@ def login():
 
     return result
 
-@app.route("/logout")
-def logout():
+@app.route("/signout")
+def signout():
     del session["email"]
     del session["user_id"]
     del session['reviewer']

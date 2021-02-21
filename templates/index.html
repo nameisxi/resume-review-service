@@ -1,17 +1,12 @@
 {% extends 'base.html' %}
 {% block content %}
-{% if session.email %}
-<p>Welcome, {{ session.email }}!</p>
-
-{% else %}
-<h2>Login</h2>
-<form action="/login" method="POST">
+<h2>Sign in</h2>
+<form action="/signin" method="POST">
     <p>Email:<br>
     <input type="text" name="email" required></p>
     <p>Password:<br>
     <input type="password" name="password" required></p>
-    <input type="submit" value="Login" name="login">
+    <input type="submit" value="Sign in" name="signin">
 </form>
 <p>No account? <a href="/signup">Sign up here</a>.</p>
-{% endif %}
 {% endblock %}
