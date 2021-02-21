@@ -33,7 +33,3 @@ Valmiit testikäyttäjät:
 | ---------- | ---------| -------------- |
 | testuser@email.com | 123 | Käyttäjä |
 | testreviewer@email.com | 123 | Arvostelija|
-
-TODO:
--testi kayttajat (user & reviewer) datan kera
--add unique filter to users email field
