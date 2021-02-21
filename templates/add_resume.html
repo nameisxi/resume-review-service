@@ -1,11 +1,9 @@
 {% extends 'base.html' %}
 {% block content %}
-<!--<head>
-    <script type=text/javascript src="{{url_for('static', filename='js/add_resume.js') }}"></script>
-</head>-->
+
 <h2>Add new resume </h2>
 <form action="/add-resume" method="POST" enctype=multipart/form-data>
-    <input type=file accept="application/pdf" name=resume id="resume">
+    <input type="file" accept="application/pdf" name=resume id="resume" required>
     <input type="submit" value="Add" name="add">
 </form>
 <script>

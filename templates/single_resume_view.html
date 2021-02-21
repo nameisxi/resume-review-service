@@ -1,30 +1,79 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>{{ resume[0].split("_identifier_")[1] }}</h2>
+
+<!--<h2>{{ resume[0].split("_identifier_")[1] }}</h2>
 {% if session.reviewer %}
 Submitted by: {{ resume[1] }}
 {% else %}
 Assigned to: {{ resume[1] }}
 {% endif %}
 <br>
-Submitted at: {{ resume[2] }}
-<embed src="{{ request.url_root }}uploads/{{ resume[4] }}" width= "500" height= "800" type="application/pdf">
-<h3>Feedback</h3>
-{% for message in messages %}
-<div>
-    <p>Sender: {{ message[0] }}</p>
-    <p>Sent at: {{ message[1] }}</p>
-    <br>
-    <p>{{ message[2] }}</p>
-</div>
-<hr>
-{% endfor %}
+Submitted at: {{ resume[2] }}-->
 
-<form action="/send-message/{{ resume[3] }}" method="POST">
-    <p>New message:<br>
-    <input type="textarea" name="message" required></p>
-    <br>
-    <input type="submit" value="Send" name="send_message">
-</form>
+<div class="jumbotron" style="padding: 2%">
+    <div class="container">
+        <h1 class="display-4" style="white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">
+            {{ resume[0].split("_identifier_")[1] }}
+        </h1>
+        {% if session.reviewer %}
+            <p>Submitted by: {{ resume[1] }}</p>
+        {% else %}
+            <p>Assigned to: {{ resume[1] }}</p>
+        {% endif %}
+        <p>Submitted at: {{ resume[2] }}</p>
+        <p><a class="btn btn-primary btn-lg" href="/resumes" role="button">Back to resumes »</a></p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <!-- PDF viewer -->
+        <div id="pdf-viewer" class="col-md-8 embed-responsive" style='padding-bottom:95%'>
+            <embed class="embed-responsive-item" src="{{ request.url_root }}uploads/{{ resume[4] }}" width="100%" height="100%" type="application/pdf">
+        </div>
+        <!-- Chat -->
+        <div class="col-md-4">
+            <!-- Messages -->
+            <div class="overflow-auto">
+                {% if not messages %}
+                    <p>No feedback yet. Wait until one of our reviewers takes a look at your resume.</p>
+                {% else %}
+                    {% for message in messages %}
+                    <div class="row">
+                        <div class="col-md-8">
+                            {% if session.email == message[0] %}
+                                <span class="badge badge-secondary">{{ message[0] }}</span>
+                            {% else %}
+                                <span class="badge badge-light">{{ message[0] }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <!-- Timestamp: -->
+                            <!--<p>{{ message[1] }}</p>-->
+                            <p>TODO</p>
+                        </div>
+                        <div style="display: inline-block; overflow-wrap:break-word; padding-left: 5%;">
+                            {{ message[2] }}
+                        </div>
+                    </div>
+                    <hr>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <!-- Message field and send button -->
+            <div class="row" style="padding-left: 5%;">
+                <form action="/send-message/{{ resume[3] }}" method="POST">
+                    <div class="input-group">
+                        <input type="textarea" name="message" placeholder="New message" required></p>
+                        <span class="input-group-btn">
+                            <input type="submit" value="Send" name="send_message">
+                        </span>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}

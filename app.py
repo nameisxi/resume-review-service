@@ -25,6 +25,9 @@ def load_configs(app):
 app = Flask(__name__)
 app, db = load_configs(app)   
 
+def get_user_id(email):
+    user_id = db.session.execute("SELECT id FROM users WHERE email = :email", {"email": session.get('email')}).fetchone()[0]
+    return user_id
 
 def create_account(email, password, reviewer):
     """
@@ -38,12 +41,11 @@ def create_account(email, password, reviewer):
     db.session.commit()
 
     return sign_in(email, reviewer)
+
 def sign_in(email, reviewer):
     session["email"] = email
+    session["user_id"] = get_user_id(email)
     session["reviewer"] = reviewer
-
-    print("****************")
-    print(session.get('reviewer'))
 
     return redirect("/")
 
@@ -125,15 +127,22 @@ def fetch_resumes(email, reviewer):
 
     return resumes
 
+def resume_chunks(resumes, n):
+    """
+        Splits a list into n-sized chunks 
+    """
+    for i in range(0, len(resumes), n):
+        yield resumes[i:i + n]
+
 def allowed_filename(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in 'pdf'
 
 def upload_resume(request):
-    if 'resume' not in request.files:
+    if 'resume-field' not in request.files:
         flash('No resume part')
         return redirect(request.url)
         
-    resume = request.files['resume']
+    resume = request.files['resume-field']
 
     if resume.filename == '':
         flash('No selected file')
@@ -196,6 +205,7 @@ def index():
 def resumes():
     if session.get('email'):
         resumes = fetch_resumes(session.get('email'), session.get('reviewer'))
+        resumes = resume_chunks(resumes, 3)
         return render_template("resumes.html", resumes=resumes)
     return redirect("/")
 
@@ -288,7 +298,9 @@ def login():
 @app.route("/logout")
 def logout():
     del session["email"]
+    del session["user_id"]
     del session['reviewer']
+
     return redirect("/")
 
 

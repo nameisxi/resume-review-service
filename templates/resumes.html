@@ -1,28 +1,62 @@
 {% extends 'base.html' %}
 {% block content %}
-{% if session.reviewer %}
-<h2>Resumes assigned to you</h2>
-{% else %}
-<h2>Your resumes </h2>
-{% endif %}
-<hr>
 
-{% for resume in resumes %}
-<div id="{{ resume[3] }}" onClick="location.href='{{ request.url }}/{{ resume[3] }}'">
-    Name: {{ resume[0].split("_identifier_")[1] }}
-    <br>
-    {% if session.reviewer %}
-    Submitted by: {{ resume[1] }}
-    {% else %}
-    Assigned to: {{ resume[1] }}
-    {% endif %}
-    <br>
-    Submitted at: {{ resume[2] }}
+<div class="jumbotron">
+    <div class="container">
+        {% if session.reviewer %}
+            <h1 class="display-3">Resumes assigned to you</h1>
+        {% else %}
+            <h1 class="display-3">Your resumes</h1>
+            <p>Here you can find the resumes that you have uploaded. Each resume gets assigned to one of our reviewers, so just sit back and wait until you get feedback.</p>
+            
+            <form id="resume-form" action="/add-resume" method="POST" enctype="multipart/form-data">
+                <input type="file" accept="application/pdf" name="resume-field" id="resume-field" style="display:none;" onchange="submitResume()" required>
+                <input class="btn btn-primary btn-lg" type="submit" value="Add resume +" name="add" onclick="resumeUpload()">
+            </form>
+            
+            <!--<p><a class="btn btn-primary btn-lg" href="/add-resume" role="button">Add resume +</a></p>-->
+        {% endif %}
+    </div>
 </div>
-<hr>
-{% endfor %}
 
-{% if not session.reviewer %}
-<h3><a href="/add-resume">Add resume</a></h3>
-{% endif %}
+<div class="container">
+    {% for chunk in resumes %}
+        <div class="row">
+            {% for resume in chunk %}
+                <div id="{{ resume[3] }}" class="col-md-4 text-truncate">
+                    <h2 style="white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">
+                        {{ resume[0].split("_identifier_")[1] }}
+                    </h2>
+                    {% if session.reviewer %}
+                        <p><span class="badge badge-light">Submitted by:</span> {{ resume[1] }}</p>
+                    {% else %}
+                    <p><span class="badge badge-light">Assigned to:</span> {{ resume[1] }}</p>
+                    {% endif %}
+                    <p><span class="badge badge-light">Submitted at:</span> {{ resume[2] }}</p>
+                    <p><a class="btn btn-secondary" href="/resumes/{{ resume[3] }}" role="button">Open »</a></p>
+                </div>
+            {% endfor %}
+        </div>
+        <hr>
+    {% endfor %}
+</div>
+
+<script>
+    function resumeUpload() {
+        document.getElementById("resume-field").click();
+    };
+
+    function submitResume() {
+        var resumeField = document.getElementById("resume-field");
+
+        if(resumeField.files[0].size > 5242880){
+            alert("Your resume is too big! The maximum filesize is 5MB.");
+            resumeField.value = "";
+            return;
+        };
+
+        document.getElementById("resume-form").submit()
+    };
+</script>
+
 {% endblock %}
