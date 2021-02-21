@@ -209,12 +209,6 @@ def resumes():
         return render_template("resumes.html", resumes=resumes)
     return redirect("/")
 
-@app.route("/add-resume", methods=['GET'])
-def add_resume_template():
-    if session.get('email'):
-        return render_template("add_resume.html")
-    return redirect("/")
-
 @app.route("/add-resume", methods=['POST'])
 def add_resume():
     if session.get('email'):
