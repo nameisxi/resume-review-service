@@ -29,7 +29,10 @@ Arvostelija (henkilö joka arvioi CV:itä):
 Sovellusta voi testata täällä: http://resume-review-service.herokuapp.com/
 
 Valmiit testikäyttäjät:
-
+| Sähköposti | Salasana | Käyttäjätyyppi |
+| ---------- | ---------| -------------- |
+| testuser@email.com | 123 | Käyttäjä |
+| testreviewer@email.com | 123 | Arvostelija|
 
 TODO:
 -testi kayttajat (user & reviewer) datan kera
