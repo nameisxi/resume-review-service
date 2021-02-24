@@ -17,6 +17,7 @@ def load_configs(app):
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     # File saving configs
     app.config['UPLOAD_FOLDER'] = './resumes/'
+    app.config['MAX_CONTENT_LENGTH'] = 5 * 1000 * 1000
 
     db = SQLAlchemy(app)
 
@@ -49,18 +50,30 @@ def sign_in(email, reviewer):
 
     return redirect("/")
 
-def validate_credentials(email, password):
+def validate_credentials(email, password, account_type):
     """ 
         Validates weather given email and password 
         can be used to create a new account. If yes,
         this function returns a None. If not okay,
         it returns an error message.
     """
-    if not email.strip():
+    if email.strip is None:
         return "Invalid email address"
 
-    if not password.strip():
+    if password is None:
         return "Invalid password"
+
+    if account_type is None:
+        return "Invalid account type"
+
+    if account_type != "0" and account_type != "1":
+        return "Invalid account type"
+
+    if len(email) > 1000:
+        return "Email address too long. Max length: 1000 characters"
+    
+    if len(password) > 1000:
+        return "Password address too long. Max length: 1000 characters"
 
     sql = "SELECT password FROM users WHERE email=:email"
     result = db.session.execute(sql, {"email":email})
@@ -74,29 +87,128 @@ def validate_credentials(email, password):
 def check_credentials(email, password):
     """ 
         Checks weather given email and password 
-        can be used to login. If yes, this 
+        can be used to sign in. If yes, this 
         function returns a None. If not okay,
         it returns an error message.
     """
 
-    if not email:
+    if email is None:
         return "Invalid email address", None
 
-    if not password:
+    if password is None:
         return "Invalid password", None
+
+    if len(email) > 1000:
+        return "Email address too long. Max length: 1000 characters"
+    
+    if len(password) > 1000:
+        return "Password address too long. Max length: 1000 characters"   
 
     sql = "SELECT password, reviewer FROM users WHERE email=:email"
     result = db.session.execute(sql, {"email":email}).fetchone()   
 
     if result == None:
-        return "Invalid username", None
+        return "Wrong username", None
     else:
         hash_value = result[0]
         reviewer = result[1]
-        if check_password_hash(hash_value,password):
+        if check_password_hash(hash_value, password):
             return None, reviewer
         else:
-            return "Invalid password", None
+            return "Wrong password", None
+
+def validate_password_change(current_password, new_password):
+    """ 
+        Validates weather password change can be made. 
+        If yes, this function returns a None. If not okay,
+        it returns an error message.
+    """
+    if current_password is None:
+        return "Invalid current password"
+
+    if new_password is None:
+        return "Invalid new password"
+
+    if len(current_password) > 1000:
+        return "Current password address too long. Max length: 1000 characters"
+    
+    if len(new_password) > 1000:
+        return "New password address too long. Max length: 1000 characters"
+
+    if current_password == new_password:
+        return "Current password and new password are the same. Please input different passwords."
+
+    sql = "SELECT password FROM users WHERE id=:user_id"
+    result = db.session.execute(sql, {"user_id":session.get("user_id")}).fetchone()  
+
+    hash_value = result[0]
+    if check_password_hash(hash_value, current_password):
+        return None
+    else:
+        return "Wrong current password"
+
+def change_password(new_password):
+    sql = """
+            UPDATE users
+            SET password = :new_password
+            WHERE id = :user_id
+        """
+
+    hash_value = generate_password_hash(new_password)
+
+    db.session.execute(sql, {"new_password":hash_value,"user_id":session.get("user_id")})
+    db.session.commit()
+
+def delete_account():
+    """
+        Deletes user's account. Not designed - purposefully - to delete reviewer's account.
+        For reviewer's account disabling, see disable_account().
+    """
+
+    user_id = session.get("user_id")
+
+    # TODO: add ratings deletion
+    #ratings_sql = """"""
+
+    # Deletes all messages related to the resumes associated with the current user_id that's about to get deleted
+    messages_sql = """
+                    DELETE FROM messages
+                    WHERE sender_id = :user_id
+                    OR EXISTS(
+                        SELECT * FROM resumes 
+                        WHERE resumes.user_id = :user_id
+                        AND messages.resume_id = resumes.id    
+                    )
+                    """
+    db.session.execute(messages_sql, {"user_id": user_id})
+    db.session.commit()
+
+    # Deletes all resumes associated with the current user_id
+    resumes_sql = """
+                    DELETE FROM resumes
+                    WHERE user_id = :user_id
+                    """
+    db.session.execute(resumes_sql, {"user_id": user_id})
+    db.session.commit()
+
+    # Deletes all users associated with the current user_id
+    print(user_id)
+    users_sql = """
+                    DELETE FROM users
+                    WHERE id = :user_id
+                """
+    db.session.execute(resumes_sql, {"user_id": user_id})
+    db.session.commit()
+
+def disable_account():
+    """
+        Disables reviewer's account. This is a kind of a soft deletion method, as deleting reviewer's account could cause lots of trouble.
+        This way we can communicate to the user, that the reviewer that they used to communicate with, is no longer active.
+        This way we also won't face optimization problems, such as multiple reviewers deleting their accounts, and few reviewers getting huge
+        review loads, while new reviewers could start from scratch.
+    """
+    pass
+
 
 def fetch_resumes(email, reviewer):
     if not email:
@@ -150,20 +262,21 @@ def upload_resume(request):
 
     if resume and allowed_filename(resume.filename):
         filename = f"{session.get('email')}_{time.time()}_identifier_{resume.filename}"
+        if len(filename) > 1000:
+            filename = f"{session.get('email')}_{time.time()}_identifier_{resume.filename[-500:]}"
+
         filename = secure_filename(filename)
         file_address = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        
         resume.save(file_address)
 
-        user_id = db.session.execute("SELECT id FROM users WHERE email = :email", {"email": session.get('email')}).fetchone()[0]
         # By using ORDER BY random() LIMIT 1, a random reviewer will be picked
         reviewer_id =  db.session.execute("SELECT id FROM users WHERE reviewer = true ORDER BY random() LIMIT 1").fetchone()[0]      
 
         sql = """
-                   INSERT INTO resumes (user_id,reviewer_id,file_address,name) VALUES (:user_id,:reviewer_id,:file_address,:name) 
-                """
+                INSERT INTO resumes (user_id,reviewer_id,file_address,name) VALUES (:user_id,:reviewer_id,:file_address,:name) 
+            """
 
-        db.session.execute(sql, {"user_id": user_id, "reviewer_id": reviewer_id, "file_address": file_address, "name": filename})
+        db.session.execute(sql, {"user_id": session.get("user_id"), "reviewer_id": reviewer_id, "file_address": file_address, "name": filename})
         db.session.commit()
 
         return redirect("/resumes")
@@ -186,6 +299,11 @@ def fetch_messages(resume_id):
     return messages
 
 def save_message(resume_id, message):
+    if len(message) > 15000:
+        # Getting a single message this long (equivalent of 500x, 30 character long, words) is highly unlikely, 
+        # so I'll just cut it if it gets past this point
+        message = message[:15000]
+
     sender_id = db.session.execute("SELECT id FROM users WHERE email = :email", {"email": session.get('email')}).fetchone()[0]
 
     sql = "INSERT INTO messages (sender_id,resume_id,message) VALUES (:sender_id,:resume_id,:message)"
@@ -227,7 +345,6 @@ def send_message(resume_id):
     
     return redirect("/")
         
-
 @app.route("/resumes/<int:resume_id>", methods=['GET'])
 def resume_view(resume_id):
     if session.get('email'):
@@ -247,9 +364,8 @@ def resume_view(resume_id):
 
 @app.route("/uploads/<path:file_address>", methods=['GET']) 
 def serve_resume(file_address):
-    file_address = f"./{file_address}"
-
     if session.get("email"):
+        file_address = f"./{file_address}"
         resumes = fetch_resumes(session.get('email'), session.get('reviewer'))
         
         for resume in resumes:
@@ -260,24 +376,83 @@ def serve_resume(file_address):
 
     return redirect("/")
 
+@app.route("/account/", methods=['GET'])
+def account():
+    if session.get("email"):
+        if session.get("password-change-success"):
+            success = session["password-change-success"]
+            del session["password-change-success"]
+
+            return render_template("account.html", success=success)
+
+        if session.get("password-change-error"):
+            error = session["password-change-error"]
+            del session["password-change-error"]
+
+            return render_template("account.html", error=error)
+        
+        return render_template("account.html") 
+
+    return redirect("/")
+
+@app.route("/change-password/<int:user_id>", methods=['POST'])
+def password(user_id):
+    if session.get("user_id") and session.get("user_id") == user_id:
+        current_password = request.form["current-password"].strip()
+        new_password = request.form["new-password"].strip()
+
+        error = validate_password_change(current_password, new_password)
+
+        if error is None:
+            change_password(new_password)
+            session["password-change-success"] = "Password successfully changed."
+            return redirect("/account")
+
+        session["password-change-error"] = error
+        return redirect("/account")
+
+    return redirect("/")
+
+@app.route("/change-password/<int:user_id>", methods=['GET'])
+def password_attempt():
+    if session.get("email"):
+        return redirect("/account")
+    return redirect("/")
+
+@app.route("/delete-account/<int:user_id>", methods=['POST'])
+def del_account(user_id):
+    print("Toimii")
+    if session.get("user_id") and session.get("user_id") == user_id:
+        print("TOimii 2")
+        delete_account()
+        return redirect("/signout")
+
+    return redirect("/")
+
 @app.route("/signup", methods=['GET'])
 def signup_template():
     return render_template("signup.html")
 
 @app.route("/signup", methods=["POST"])
 def signup():
+    if session.get("email"):
+        return redirect("/signout")
+        
     email = request.form["email"].lower().strip()
     password = request.form["password"].strip()
-    user_type = request.form["user-type"]
+    account_type = request.form["account-type"].strip()
 
-    error = validate_credentials(email, password)
+    error = validate_credentials(email, password, account_type)
 
     if error is None:
-        return create_account(email, password, user_type == "1")
+        return create_account(email, password, account_type == "1")
     return render_template("signup.html", error=error)
 
 @app.route("/signin", methods=["POST"])
 def signin():
+    if session.get("email"):
+        return redirect("/signout")
+
     email = request.form["email"].lower().strip()
     password = request.form["password"].strip()
 

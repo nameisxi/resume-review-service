@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="jumbotron">
+    <div class="container">
+        <h1 class="display-4" style="white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">
+            Account
+        </h1>
+        <p><a class="btn btn-primary btn-lg" href="/resumes" role="button">Back to resumes »</a></p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row" style="margin-left: 2%;">
+        <h3 class="display-5" style="white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">
+            Account information
+        </h3>
+    </div>
+    <div class="row" style="margin-left: 2%;">
+       <p>Email address: {{ session.email }}</p>
+    </div>
+
+    <hr>
+    <div class="row" style="margin-left: 2%;">
+        <h3 class="display-5" style="white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">
+            Change your password
+        </h3>
+    </div>
+    <form action="/change-password/{{ session.user_id }}" method="POST" style="margin-left: 2%;">
+        <div class="form-group mx-sm-3 mb-2">
+          <label for="inputPassword">Current password</label>
+          <input type="password" class="form-control" placeholder="Password" name="current-password" maxlength="1000" required>
+        </div>
+        <div class="form-group mx-sm-3 mb-2">
+          <label for="inputPassword">New Password</label>
+          <input type="password" class="form-control" placeholder="Password" name="new-password" maxlength="1000" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Change password</button>
+      </form>
+    <br>
+    <br>
+    <hr>
+    {% if session.reviewer %}
+      <p>As a reviewer, you can't delete your account. Upcoming feature let's you disable your account.</p>
+    {% else %}
+        <div class="row" style="margin-left: 2%;">
+            <!-- Delete account button that triggers the modal -->
+            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteAccountModal">Delete Account</button>
+            <!-- Modal -->
+            <div class="modal fade" id="deleteAccountModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Delete Account</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to delete your account? <br> This action can't be undone.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <form action="/delete-account/{{ session.user_id }}" method="POST">
+                                <button type="submit" class="btn btn-danger">Delete Account</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

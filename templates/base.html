@@ -30,8 +30,7 @@
 								{{ session.email }}
 							</a>
 							<div class="dropdown-menu" aria-labelledby="navbarDropdown">
-								<a class="dropdown-item" href="/profile">TODO: Profile</a>
-								<a class="dropdown-item" href="/account">TODO: Account</a>
+								<a class="dropdown-item" href="/account">Account</a>
 								<div class="dropdown-divider"></div>
 								<a class="dropdown-item" href="/signout">Sign out</a>
 							</div>
@@ -39,6 +38,12 @@
 					</ul>
 				</div>
 			</nav>
+		{% endif %}
+
+		{% if success %}
+		<div class="alert alert-success" role="alert">
+			{{ success }}
+		</div>
 		{% endif %}
 
 		{% if error %}

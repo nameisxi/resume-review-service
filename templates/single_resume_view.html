@@ -1,15 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<!--<h2>{{ resume[0].split("_identifier_")[1] }}</h2>
-{% if session.reviewer %}
-Submitted by: {{ resume[1] }}
-{% else %}
-Assigned to: {{ resume[1] }}
-{% endif %}
-<br>
-Submitted at: {{ resume[2] }}-->
-
 <div class="jumbotron" style="padding: 2%">
     <div class="container">
         <h1 class="display-4" style="white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">
@@ -65,7 +56,7 @@ Submitted at: {{ resume[2] }}-->
             <div class="row" style="padding-left: 5%;">
                 <form action="/send-message/{{ resume[3] }}" method="POST">
                     <div class="input-group">
-                        <input type="textarea" name="message" placeholder="New message" required></p>
+                        <input type="textarea" name="message" placeholder="New message" maxlength="15000" required></p>
                         <span class="input-group-btn">
                             <input type="submit" value="Send" name="send_message">
                         </span>
