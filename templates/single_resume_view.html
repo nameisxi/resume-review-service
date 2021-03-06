@@ -1,4 +1,48 @@
 {% extends 'base.html' %}
+{% block head %}
+    {{ super() }}
+    <style type="text/css">
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        .rate {
+            float: left;
+            height: 46px;
+            padding: 0 0px;
+        }
+        .rate:not(:checked) > input {
+            position:absolute;
+            top:-9999px;
+        }
+        .rate:not(:checked) > label {
+            float:right;
+            width:1em;
+            overflow:hidden;
+            white-space:nowrap;
+            cursor:pointer;
+            font-size:30px;
+            color:#ccc;
+        }
+        .rate:not(:checked) > label:before {
+            content: '★ ';
+        }
+        .rate > input:checked ~ label {
+            color: #ffc700;    
+        }
+        .rate:not(:checked) > label:hover,
+        .rate:not(:checked) > label:hover ~ label {
+            color: #deb217;  
+        }
+        .rate > input:checked + label:hover,
+        .rate > input:checked + label:hover ~ label,
+        .rate > input:checked ~ label:hover,
+        .rate > input:checked ~ label:hover ~ label,
+        .rate > label:hover ~ input:checked ~ label {
+            color: #c59b08;
+        }
+    </style>
+{% endblock %}
 {% block content %}
 
 <div class="jumbotron" style="padding: 2%">
@@ -10,9 +54,95 @@
             <p>Submitted by: {{ resume[1] }}</p>
         {% else %}
             <p>Assigned to: {{ resume[1] }}</p>
+            {% if resume[5] %}
+                <span class="badge badge-danger">This reviewer's account has been disabled.</span>
+                <br>
+                <a href="/new-reviewer/{{ resume[3] }}" class="badge badge-info">Click here for a new reviewer if you still need help. (Feature not ready)</a>
+            {% endif %}
         {% endif %}
-        <p>Submitted at: {{ resume[2] }}</p>
-        <p><a class="btn btn-primary btn-lg" href="/resumes" role="button">Back to resumes »</a></p>
+        <p>Submitted at: {{ resume[2].strftime("%B %d, %Y at %H:%M") }}</p>
+        <div class="row">
+            <!--<div class="col-sm-3">
+                <p><a class="btn btn-primary btn-lg" href="/resumes" role="button">Back to resumes »</a></p>
+            </div>-->
+            <!-- Star rating -->
+            {% if not session.reviewer %}
+                <div class="col-sm-8" style="float: left;">
+                    <div class="rate">
+                        <form class="rate" action="/give-rating/{{ resume[3] }}" method="POST">
+                            {% if rating == 5 %}
+                                <input onChange="this.form.submit();" type="radio" id="star5" class="rate" name="rate" value="5" checked />
+                            {% else %}
+                                <input onChange="this.form.submit();" type="radio" id="star5" class="rate" name="rate" value="5" />
+                            {% endif %}
+                            <label for="star5" title="text">5 stars</label>
+
+                            {% if rating == 4 %}
+                                <input onChange="this.form.submit();" type="radio" id="star4" class="rate" name="rate" value="4" checked />
+                            {% else %}
+                                <input onChange="this.form.submit();" type="radio" id="star4" class="rate" name="rate" value="4" />
+                            {% endif %}
+                            <label for="star4" title="text">4 stars</label>
+
+                            {% if rating == 3 %}
+                                <input onChange="this.form.submit();" type="radio" id="star3" class="rate" name="rate" value="3" checked />
+                            {% else %}
+                                <input onChange="this.form.submit();" type="radio" id="star3" class="rate" name="rate" value="3" />
+                            {% endif %}
+                            <label for="star3" title="text">3 stars</label>
+
+                            {% if rating == 2 %}
+                                <input onChange="this.form.submit();" type="radio" id="star2" class="rate" name="rate" value="2" checked />
+                            {% else %}
+                                <input onChange="this.form.submit();" type="radio" id="star2" class="rate" name="rate" value="2" />
+                            {% endif %}
+                            <label for="star2" title="text">2 stars</label>
+
+                            {% if rating == 1 %}
+                                <input onChange="this.form.submit();" type="radio" id="star1" class="rate" name="rate" value="1" checked />
+                            {% else %}
+                                <input onChange="this.form.submit();" type="radio" id="star1" class="rate" name="rate" value="1" />
+                            {% endif %}
+                            <label for="star1" title="text">1 stars</label>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="col-sm-4" style="float: left;">
+                    <!-- Delete resume button that triggers the modal -->
+                    <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#deleteResumeModal-{{resume[3]}}" style="float: left;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"></path>
+                            <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"></path>
+                        </svg>
+                        Delete
+                    </button>
+
+                    <!-- Modal -->
+                    <div class="modal fade" id="deleteResumeModal-{{resume[3]}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Delete Resume</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Are you sure you want to delete this resume? <br> This action can't be undone.</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                    <form action="/delete-resume/{{ resume[3] }}" method="POST">
+                                        <button type="submit" class="btn btn-danger">Delete Resume</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
     </div>
 </div>
 
@@ -27,21 +157,24 @@
             <!-- Messages -->
             <div class="overflow-auto">
                 {% if not messages %}
-                    <p>No feedback yet. Wait until one of our reviewers takes a look at your resume.</p>
+                    {% if session.reviewer %}
+                        <p>You haven't given any feedback yet.</p>
+                    {% else %}
+                        <p>No feedback yet. Wait until one of our reviewers takes a look at your resume.</p>
+                    {% endif %}
                 {% else %}
                     {% for message in messages %}
                     <div class="row">
-                        <div class="col-md-8">
+                        <div class="col-md-6">
                             {% if session.email == message[0] %}
                                 <span class="badge badge-secondary">{{ message[0] }}</span>
                             {% else %}
                                 <span class="badge badge-light">{{ message[0] }}</span>
                             {% endif %}
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <!-- Timestamp: -->
-                            <!--<p>{{ message[1] }}</p>-->
-                            <p>TODO</p>
+                            <p>{{ message[1].strftime("%H:%M %B %d, %Y") }}</p>
                         </div>
                         <div style="display: inline-block; overflow-wrap:break-word; padding-left: 5%;">
                             {{ message[2] }}
@@ -53,13 +186,13 @@
             </div>
             
             <!-- Message field and send button -->
-            <div class="row" style="padding-left: 5%;">
-                <form action="/send-message/{{ resume[3] }}" method="POST">
-                    <div class="input-group">
-                        <input type="textarea" name="message" placeholder="New message" maxlength="15000" required></p>
-                        <span class="input-group-btn">
-                            <input type="submit" value="Send" name="send_message">
-                        </span>
+            <div class="row" style="padding-left: 5%; padding-right: 5%;">
+                <form class="w-100" action="/send-message/{{ resume[3] }}" method="POST">
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" name="message" placeholder="New message" maxlength="15000" required></p>
+                        <div class="input-group-prepend">
+                            <input type="submit" class="btn btn-outline-secondary" type="button" value="Send" name="send_message">
+                        </div>
                     </div>
                 </form>
             </div>

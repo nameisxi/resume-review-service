@@ -1,5 +1,6 @@
 import os, time
 from os import getenv
+from datetime import datetime
 
 from flask import Flask
 from flask import redirect, render_template, request, session, url_for, flash, send_from_directory
@@ -23,11 +24,11 @@ def load_configs(app):
 
     return app, db
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static")
 app, db = load_configs(app)   
 
 def get_user_id(email):
-    user_id = db.session.execute("SELECT id FROM users WHERE email = :email", {"email": session.get('email')}).fetchone()[0]
+    user_id = db.session.execute("SELECT id FROM users WHERE email = :email AND deleted = false", {"email": session.get('email')}).fetchone()[0]
     return user_id
 
 def create_account(email, password, reviewer):
@@ -41,14 +42,10 @@ def create_account(email, password, reviewer):
     db.session.execute(sql, {"email":email,"password":hash_value,"reviewer":reviewer})
     db.session.commit()
 
-    return sign_in(email, reviewer)
-
 def sign_in(email, reviewer):
     session["email"] = email
     session["user_id"] = get_user_id(email)
     session["reviewer"] = reviewer
-
-    return redirect("/")
 
 def validate_credentials(email, password, account_type):
     """ 
@@ -71,11 +68,14 @@ def validate_credentials(email, password, account_type):
 
     if len(email) > 1000:
         return "Email address too long. Max length: 1000 characters"
+
+    if len(password) < 8:
+        return "Password too short. Min length: 8 characters"
     
     if len(password) > 1000:
-        return "Password address too long. Max length: 1000 characters"
+        return "Password too long. Max length: 1000 characters"
 
-    sql = "SELECT password FROM users WHERE email=:email"
+    sql = "SELECT password FROM users WHERE email=:email AND deleted = false"
     result = db.session.execute(sql, {"email":email})
     user = result.fetchone()  
 
@@ -99,12 +99,12 @@ def check_credentials(email, password):
         return "Invalid password", None
 
     if len(email) > 1000:
-        return "Email address too long. Max length: 1000 characters"
+        return "Email address too long. Max length: 1000 characters", None
     
     if len(password) > 1000:
-        return "Password address too long. Max length: 1000 characters"   
+        return "Password too long. Max length: 1000 characters", None   
 
-    sql = "SELECT password, reviewer FROM users WHERE email=:email"
+    sql = "SELECT password, reviewer FROM users WHERE email=:email AND deleted = false"
     result = db.session.execute(sql, {"email":email}).fetchone()   
 
     if result == None:
@@ -130,15 +130,18 @@ def validate_password_change(current_password, new_password):
         return "Invalid new password"
 
     if len(current_password) > 1000:
-        return "Current password address too long. Max length: 1000 characters"
+        return "Current password too long. Max length: 1000 characters"
+
+    if len(new_password) < 8:
+        return "New password too short. Min length: 8 characters"
     
     if len(new_password) > 1000:
-        return "New password address too long. Max length: 1000 characters"
+        return "New password too long. Max length: 1000 characters"
 
     if current_password == new_password:
         return "Current password and new password are the same. Please input different passwords."
 
-    sql = "SELECT password FROM users WHERE id=:user_id"
+    sql = "SELECT password FROM users WHERE id=:user_id AND deleted = false"
     result = db.session.execute(sql, {"user_id":session.get("user_id")}).fetchone()  
 
     hash_value = result[0]
@@ -152,6 +155,7 @@ def change_password(new_password):
             UPDATE users
             SET password = :new_password
             WHERE id = :user_id
+            AND deleted = false
         """
 
     hash_value = generate_password_hash(new_password)
@@ -159,55 +163,145 @@ def change_password(new_password):
     db.session.execute(sql, {"new_password":hash_value,"user_id":session.get("user_id")})
     db.session.commit()
 
-def delete_account():
-    """
-        Deletes user's account. Not designed - purposefully - to delete reviewer's account.
-        For reviewer's account disabling, see disable_account().
-    """
+def delete_rating(resume_id):
+    """ Deletes a rating from a specified resume associated with the current user_id """
 
-    user_id = session.get("user_id")
+    ratings_sql = """
+                    UPDATE ratings
+                    SET deleted = true
+                    WHERE customer_id = :user_id
+                    AND resume_id = :resume_id
+                    AND ratings.deleted = false
+                  """
+    db.session.execute(ratings_sql, {"user_id": session.get("user_id"), "resume_id": resume_id})
+    db.session.commit()
 
-    # TODO: add ratings deletion
-    #ratings_sql = """"""
 
-    # Deletes all messages related to the resumes associated with the current user_id that's about to get deleted
+def delete_ratings():
+    """ Deletes all ratings related to the resumes associated with the current user_id 
+        that's about to get deleted """
+
+    ratings_sql = """
+                    UPDATE ratings
+                    SET deleted = true
+                    WHERE customer_id = :user_id
+                    AND ratings.deleted = false
+                  """
+    db.session.execute(ratings_sql, {"user_id": session.get("user_id")})
+    db.session.commit()
+
+def delete_message(resume_id):
+    """ Deletes messages from a specified resume associated with the current user_id """
     messages_sql = """
-                    DELETE FROM messages
+                    UPDATE messages
+                    SET deleted = true
                     WHERE sender_id = :user_id
+                    AND resume_id = :resume_id
+                    AND messages.deleted = false
                     OR EXISTS(
                         SELECT * FROM resumes 
                         WHERE resumes.user_id = :user_id
-                        AND messages.resume_id = resumes.id    
+                        AND messages.resume_id = :resume_id  
+                        AND resumes.deleted = false  
                     )
-                    """
-    db.session.execute(messages_sql, {"user_id": user_id})
+                   """
+    db.session.execute(messages_sql, {"user_id": session.get("user_id"), "resume_id": resume_id})
     db.session.commit()
 
-    # Deletes all resumes associated with the current user_id
+def delete_messages():
+    """ Deletes all messages related to the resumes associated with the current user_id 
+        that's about to get deleted """
+
+    messages_sql = """
+                    UPDATE messages
+                    SET deleted = true
+                    WHERE sender_id = :user_id
+                    AND messages.deleted = false
+                    OR EXISTS(
+                        SELECT * FROM resumes 
+                        WHERE resumes.user_id = :user_id
+                        AND messages.resume_id = resumes.id  
+                        AND resumes.deleted = false  
+                    )
+                   """
+    db.session.execute(messages_sql, {"user_id": session.get("user_id")})
+    db.session.commit()
+
+def delete_resume(resume_id):
+    """ Deletes a specified resume associated with the current user_id """
+
+    # Hard PDF file deletion
+    resumes = fetch_resumes(session.get('email'), False)
+    for resume in resumes:
+        resume_path = resume[4]
+        if resume[3] == resume_id and os.path.isfile(resume_path):
+            os.remove(resume_path)
+
+    # Soft resume table deletion
     resumes_sql = """
-                    DELETE FROM resumes
+                    UPDATE resumes
+                    SET deleted = true
                     WHERE user_id = :user_id
-                    """
-    db.session.execute(resumes_sql, {"user_id": user_id})
+                    AND id = :id
+                    AND deleted = false
+                  """
+    db.session.execute(resumes_sql, {"user_id": session.get("user_id"), "id": resume_id})
     db.session.commit()
 
-    # Deletes all users associated with the current user_id
-    print(user_id)
-    users_sql = """
-                    DELETE FROM users
-                    WHERE id = :user_id
-                """
-    db.session.execute(resumes_sql, {"user_id": user_id})
+def delete_resumes():
+    """ Deletes all resumes associated with the current user_id """
+
+    # Hard PDF file deletion
+    resumes = fetch_resumes(session.get('email'), False)
+    for resume in resumes:
+        resume_path = resume[4]
+        if os.path.isfile(resume_path):
+            os.remove(resume_path)
+
+    # Soft resume table deletion
+    resumes_sql = """
+                    UPDATE resumes
+                    SET deleted = true
+                    WHERE user_id = :user_id
+                    AND deleted = false
+                  """
+    db.session.execute(resumes_sql, {"user_id": session.get("user_id")})
     db.session.commit()
+
+def delete_user():
+    """ Deletes all users associated with the current user_id """
+
+    users_sql = """
+                    UPDATE users
+                    SET deleted = true
+                    WHERE id = :user_id
+                    AND deleted = false
+                """
+    db.session.execute(users_sql, {"user_id": session.get("user_id")})
+    db.session.commit()
+
+
+def delete_account():
+    """
+        Soft deletes user's account (except for the actual pdf resume. They get hard deleted.). 
+        Not designed - purposefully - to delete reviewer's account.
+        For reviewer's account disabling, see disable_account().
+    """
+
+    delete_ratings()
+    delete_messages()
+    delete_resumes()
+    delete_user()
 
 def disable_account():
     """
-        Disables reviewer's account. This is a kind of a soft deletion method, as deleting reviewer's account could cause lots of trouble.
+        Disables reviewer's account by soft deleting the account only on the users table, as deleting reviewer's account could cause lots of trouble.
         This way we can communicate to the user, that the reviewer that they used to communicate with, is no longer active.
         This way we also won't face optimization problems, such as multiple reviewers deleting their accounts, and few reviewers getting huge
         review loads, while new reviewers could start from scratch.
+        The user can still see the posted resume and all of the previous communication.
     """
-    pass
+    delete_user()
 
 
 def fetch_resumes(email, reviewer):
@@ -215,13 +309,14 @@ def fetch_resumes(email, reviewer):
         return []
 
     query = """
-                SELECT resumes.name, users2.email, resumes.created_at, resumes.id, resumes.file_address 
+                SELECT resumes.name, users2.email, resumes.created_at, resumes.id, resumes.file_address, users2.deleted 
                 FROM resumes
                 LEFT JOIN users AS users1
                 ON resumes.user_id = users1.id
                 LEFT JOIN users AS users2
                 ON resumes.reviewer_id = users2.id
                 WHERE users1.email = :email
+                AND resumes.deleted = false
             """
 
     if reviewer:
@@ -233,6 +328,7 @@ def fetch_resumes(email, reviewer):
                     LEFT JOIN users AS users2
                     ON resumes.user_id = users2.id
                     WHERE users1.email = :email
+                    AND resumes.deleted = false
                 """
 
     resumes = db.session.execute(query, {"email": email}).fetchall()
@@ -251,14 +347,12 @@ def allowed_filename(filename):
 
 def upload_resume(request):
     if 'resume-field' not in request.files:
-        flash('No resume part')
-        return redirect(request.url)
+        return "No resume-field in request"
         
     resume = request.files['resume-field']
 
     if resume.filename == '':
-        flash('No selected file')
-        return redirect(request.url)
+        return "No resume uploaded"
 
     if resume and allowed_filename(resume.filename):
         filename = f"{session.get('email')}_{time.time()}_identifier_{resume.filename}"
@@ -270,7 +364,7 @@ def upload_resume(request):
         resume.save(file_address)
 
         # By using ORDER BY random() LIMIT 1, a random reviewer will be picked
-        reviewer_id =  db.session.execute("SELECT id FROM users WHERE reviewer = true ORDER BY random() LIMIT 1").fetchone()[0]      
+        reviewer_id =  db.session.execute("SELECT id FROM users WHERE reviewer = true AND deleted = false ORDER BY random() LIMIT 1").fetchone()[0]      
 
         sql = """
                 INSERT INTO resumes (user_id,reviewer_id,file_address,name) VALUES (:user_id,:reviewer_id,:file_address,:name) 
@@ -279,7 +373,7 @@ def upload_resume(request):
         db.session.execute(sql, {"user_id": session.get("user_id"), "reviewer_id": reviewer_id, "file_address": file_address, "name": filename})
         db.session.commit()
 
-        return redirect("/resumes")
+        return None
 
 def fetch_messages(resume_id):
     if not resume_id:
@@ -291,6 +385,7 @@ def fetch_messages(resume_id):
                 LEFT JOIN users 
                 ON messages.sender_id = users.id
                 WHERE messages.resume_id = :resume_id
+                AND messages.deleted = false 
                 ORDER BY messages.created_at ASC
             """
 
@@ -304,14 +399,42 @@ def save_message(resume_id, message):
         # so I'll just cut it if it gets past this point
         message = message[:15000]
 
-    sender_id = db.session.execute("SELECT id FROM users WHERE email = :email", {"email": session.get('email')}).fetchone()[0]
-
     sql = "INSERT INTO messages (sender_id,resume_id,message) VALUES (:sender_id,:resume_id,:message)"
     
-    db.session.execute(sql, {"sender_id":sender_id,"resume_id":resume_id,"message":message})
+    db.session.execute(sql, {"sender_id":session.get("user_id"),"resume_id":resume_id,"message":message})
     db.session.commit()
 
-    return redirect(f"/resumes/{resume_id}")
+def fetch_rating(resume_id):
+    if not resume_id:
+        return []
+
+    query = """
+                SELECT ratings.rating 
+                FROM ratings
+                WHERE ratings.resume_id = :resume_id
+                AND ratings.deleted = false
+                ORDER BY created_at DESC
+                LIMIT 1
+            """
+
+    rating = db.session.execute(query, {"resume_id": resume_id}).fetchone()
+
+    if rating is None:
+        rating = -1
+    else:
+        rating = rating[0]
+
+    return rating
+
+def save_rating(resume_id, rating):
+    if rating not in ["1", "2", "3", "4", "5"]:
+        return "Invalid rating"
+
+    sql = "INSERT INTO ratings (customer_id,resume_id,rating) VALUES (:customer_id,:resume_id,:rating)"
+    
+    db.session.execute(sql, {"customer_id":session.get("user_id"),"resume_id":resume_id,"rating":rating})
+    db.session.commit()
+    
 
 @app.route("/", methods=['GET'])
 def index():
@@ -330,7 +453,27 @@ def resumes():
 @app.route("/add-resume", methods=['POST'])
 def add_resume():
     if session.get('email'):
-        upload_resume(request)
+        error = upload_resume(request)
+
+        if error:
+            return render_template("resumes.html", resumes=resumes, error=error)
+        
+        latest_resume = fetch_resumes(session.get("email"), session.get("reviewer"))[0]
+        resume_id = latest_resume[3]
+
+        return redirect(f"/resumes/{resume_id}")
+
+    return redirect("/")
+
+@app.route("/delete-resume/<int:resume_id>", methods=['POST'])
+def del_resume(resume_id):
+    if session.get("user_id") and not session.get("reviewer"):
+        delete_rating(resume_id)
+        delete_message(resume_id)
+        delete_resume(resume_id)
+        
+        return redirect("/resumes")
+
     return redirect("/")
 
 @app.route("/send-message/<int:resume_id>", methods=['POST']) 
@@ -341,8 +484,23 @@ def send_message(resume_id):
         
         for resume in resumes:
             if resume[3] == resume_id and message:
-                return save_message(resume_id, message)
+                save_message(resume_id, message)
+                return redirect(f"/resumes/{resume_id}")
     
+    return redirect("/")
+
+@app.route("/give-rating/<int:resume_id>", methods=['POST'])
+def give_rating(resume_id):
+    if session.get('email') and not session.get('reviewer'):
+        rating = request.form['rate'].strip()
+
+        resumes = fetch_resumes(session.get('email'), session.get('reviewer'))
+        
+        for resume in resumes:
+            if resume[3] == resume_id and rating:
+                save_rating(resume_id, rating)
+                return redirect(f"/resumes/{resume_id}")
+
     return redirect("/")
         
 @app.route("/resumes/<int:resume_id>", methods=['GET'])
@@ -358,7 +516,8 @@ def resume_view(resume_id):
         if resume_index is not None:
             resume = resumes[resume_index]
             messages = fetch_messages(resume_id)
-            return render_template("single_resume_view.html", resume=resume, messages=messages)
+            rating = fetch_rating(resume_id)
+            return render_template("single_resume_view.html", resume=resume, messages=messages, rating=rating)
 
     return redirect("/")
 
@@ -420,11 +579,17 @@ def password_attempt():
     return redirect("/")
 
 @app.route("/delete-account/<int:user_id>", methods=['POST'])
-def del_account(user_id):
-    print("Toimii")
-    if session.get("user_id") and session.get("user_id") == user_id:
-        print("TOimii 2")
+def delete(user_id):
+    if session.get("user_id") and session.get("user_id") == user_id and not session.get("reviewer"):
         delete_account()
+        return redirect("/signout")
+
+    return redirect("/")
+
+@app.route("/disable-account/<int:user_id>", methods=['POST'])
+def disable(user_id):
+    if session.get("user_id") and session.get("user_id") == user_id and session.get("reviewer"):
+        disable_account()
         return redirect("/signout")
 
     return redirect("/")
@@ -445,7 +610,9 @@ def signup():
     error = validate_credentials(email, password, account_type)
 
     if error is None:
-        return create_account(email, password, account_type == "1")
+        create_account(email, password, account_type == "1")
+        sign_in(email, account_type == "1")
+        return redirect("/")
     return render_template("signup.html", error=error)
 
 @app.route("/signin", methods=["POST"])
@@ -459,7 +626,8 @@ def signin():
     error, reviewer = check_credentials(email, password)
 
     if error is None:
-        return sign_in(email, reviewer)
+        sign_in(email, reviewer)
+        return redirect("/")
     return render_template("index.html", error=error)
 
 @app.route("/signout")

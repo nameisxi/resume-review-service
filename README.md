@@ -40,8 +40,10 @@ Valmiit testikäyttäjät:
 TODO:
 - create account view
     - ability to delete account
-- minimum password length
-- ratings
 - refactoring
-- add styling to messages form field & button
+- push to heroku
+- test heroku
+- create new test accounts
+- update readme
+
 
