@@ -18,23 +18,13 @@ Arvostelija (henkilö joka arvioi CV:itä):
 - Arvostelija voi arvioida hänelle osoitettuja CV:itä
 - Arvostelija voi kommunikoida käyttäjän kanssa kommenttien muodossa
 
-# Palautus 3: Tämän hetkinen toiminnallisuus
-Käyttäjä (henkilö joka hakee apua CV:n arviointiin):
-- Käyttäjä voi luoda uuden tilin tai kirjautua olemmassa olevalle tilille
-- Käyttäjä voi ladata CV:n palveluun PDF muodossa
-- Käyttäjä voi kommunikoida arvostelijan kanssa kommenttien muodossa (jokainen CV on kuitenkin yksityinen)
-
-Arvostelija (henkilö joka arvioi CV:itä):
-- Arvostelija voi luoda uuden tilin tai kirjautua olemmassa olevalle tilille
-- Arvostelija voi arvioida hänelle osoitettuja CV:itä
-- Arvostelija voi kommunikoida käyttäjän kanssa kommenttien muodossa
-
 # Lopullinen palautus: Tämän hetkinen toiminnallisuus
 Käyttäjä (henkilö joka hakee apua CV:n arviointiin):
 - Käyttäjä voi luoda uuden tilin tai kirjautua olemmassa olevalle tilille
 - Käyttäjä voi ladata CV:n palveluun PDF muodossa
 - Käyttäjä voi kommunikoida arvostelijan kanssa kommenttien muodossa (jokainen CV on kuitenkin yksityinen)
-- Käyttäja voi arvostella saamaansa palautetta asteikolla 1-5
+- Käyttäjä voi arvostella saamaansa palautetta asteikolla 1-5
+- Käyttäjä voi poistaa yksittäisiä CV:itä
 - Käyttäjä voi vaihtaa salasanan
 - Käyttäjä voi poistaa tilinsä (soft delete)
 - Käyttäjä saa tiedon, jos jonkin hänen CV:nsä arvioijista poistaa tilinsä käytöstä (tulevaisuudessa käyttäjä voi vielä pyytää uuden arvioijan saamista, mikäli hänen tapauksensa on vielä kesken, tai hän tarvitsee muuten apua)  
