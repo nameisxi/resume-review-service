@@ -29,19 +29,30 @@ Arvostelija (henkilö joka arvioi CV:itä):
 - Arvostelija voi arvioida hänelle osoitettuja CV:itä
 - Arvostelija voi kommunikoida käyttäjän kanssa kommenttien muodossa
 
+# Lopullinen palautus: Tämän hetkinen toiminnallisuus
+Käyttäjä (henkilö joka hakee apua CV:n arviointiin):
+- Käyttäjä voi luoda uuden tilin tai kirjautua olemmassa olevalle tilille
+- Käyttäjä voi ladata CV:n palveluun PDF muodossa
+- Käyttäjä voi kommunikoida arvostelijan kanssa kommenttien muodossa (jokainen CV on kuitenkin yksityinen)
+- Käyttäja voi arvostella saamaansa palautetta asteikolla 1-5
+- Käyttäjä voi vaihtaa salasanan
+- Käyttäjä voi poistaa tilinsä (soft delete)
+- Käyttäjä saa tiedon, jos jonkin hänen CV:nsä arvioijista poistaa tilinsä käytöstä (tulevaisuudessa käyttäjä voi vielä pyytää uuden arvioijan saamista, mikäli hänen tapauksensa on vielä kesken, tai hän tarvitsee muuten apua)  
+
+Arvostelija (henkilö joka arvioi CV:itä):
+- Arvostelija voi luoda uuden tilin tai kirjautua olemmassa olevalle tilille
+- Arvostelija voi arvioida (eli kommentoida) hänelle osoitettuja CV:itä
+- Arvostelija voi kommunikoida käyttäjän kanssa kommenttien muodossa
+- Arvostelija voi vaihtaa salasanan
+- Arvostelija voi passivoida tilinsä (disable account - tähän on monta syytä, kuten referenssien säilyttäminen, jottei käyttäjä menetä CV:tä tai hänen saamaansa feedbackkia, kuin myös työmäärän allokointi arvostelijoiden keskuudessa. Mikäli lisäkysymyksiä herää, vastaan mielelläni)
+
 Sovellusta voi testata täällä: http://resume-review-service.herokuapp.com/
 
 Valmiit testikäyttäjät:
 | Sähköposti | Salasana | Käyttäjätyyppi |
 | ---------- | ---------| -------------- |
-| testuser@email.com | 123 | Käyttäjä |
-| testreviewer@email.com | 123 | Arvostelija|
+| user@email.com | 12345678 | Käyttäjä |
+| reviewer@admin.fi | 12345678 | Arvostelija|
 
-TODO:
-- refactoring
-- push to heroku
-- test heroku
-- create new test accounts
-- update readme
 
 
