@@ -20,6 +20,7 @@ def fetch_resumes(email, reviewer):
                 ON resumes.reviewer_id = users2.id
                 WHERE users1.email = :email
                 AND resumes.deleted = false
+                ORDER BY resumes.created_at DESC
             """
 
     if reviewer:
@@ -32,6 +33,7 @@ def fetch_resumes(email, reviewer):
                     ON resumes.user_id = users2.id
                     WHERE users1.email = :email
                     AND resumes.deleted = false
+                    ORDER BY resumes.created_at DESC
                 """
 
     resumes = db.session.execute(query, {"email": email}).fetchall()
