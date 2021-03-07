@@ -38,8 +38,6 @@ Valmiit testikäyttäjät:
 | testreviewer@email.com | 123 | Arvostelija|
 
 TODO:
-- create account view
-    - ability to delete account
 - refactoring
 - push to heroku
 - test heroku
